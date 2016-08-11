@@ -1,0 +1,271 @@
+swagger: '2.0'
+info:
+  title: Parties API
+  description: Party Management
+  version: "1.0.0"
+host: api.jrjrnetworks.com
+schemes:
+  - https
+
+securityDefinitions:
+  api_authorization:
+    type: oauth2
+    description: jrjr oauth
+    authorizationUrl: http://localhost:5000/connect/authorize
+    tokenUrl: http://localhost:5000/connect/token
+    flow: accessCode
+    scopes: 
+      profile: Read user profile information
+      openid: Authenticate with OpenID
+basePath: /v1
+produces:
+  - application/json
+paths:
+  /hosts:
+    get:
+      summary: Hosts
+      description: | 
+        The Hosts endpoint returns host information for previously hosted parties.
+      tags: 
+       - Hosts
+      security:
+        - api_authorization:
+          - profile
+          - openid
+      responses:
+        200:
+          description: An array of Hosts
+          schema:
+            type: array
+            items:
+             $ref: '#/definitions/Host'
+  /hosts/{host_id}/parties:
+    get:
+      summary: Get host parties
+      description: |
+       Get the previous and future parties registered for this host.
+      tags:
+       - Hosts
+      security:
+        - api_authorization:
+          - profile
+          - openid
+      parameters:
+       - name: host_id
+         type: string
+         required: true
+         in: path
+      responses:
+        200:
+          description: An array of Parties
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Party'
+  /parties:
+    get:
+      summary: Parties
+      description: |
+        The Parties endpoint returns information about the *Consultant* parties
+        that have been created. They can include past or future parties.
+      tags:
+        - Parties
+      security:
+        - api_authorization:
+          - profile
+          - openid
+      responses:
+        200:
+          description: An array of parties
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Party'
+    post:
+      summary: Create a party
+      tags:
+       - Parties
+      security:
+        - api_authorization:
+          - profile
+          - openid
+      parameters:
+          - name: party
+            in: body
+            description: Add a new party
+            required: true
+            schema:
+              $ref: '#/definitions/CreatePartyCommand'
+      responses:
+        201:
+          headers: 
+            Location:
+              description: the URL of the created party
+              type: string
+          description: Party Created
+  /parties/{id}:
+    get:
+      summary: Get a single party
+      description: |
+        The Parties endpoint returns information about the *Consultant* parties
+        that have been created. They can include past or future parties.
+      tags:
+        - Parties
+      security:
+        - api_authorization:
+          - profile
+          - openid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: An array of parties
+          schema:
+            $ref: '#/definitions/Party'
+  /parties/{id}/invites:
+    get:
+      summary: Get the invites for the party
+      description: | 
+        pretty much that
+        and more
+      tags: 
+       - Invites
+      security:
+        - api_authorization:
+          - profile
+          - openid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: An array of invites
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Invite'
+    post:
+      summary: Invite a person
+      description: Invite someone to the party
+      tags: 
+       - Invites
+      security:
+        - api_authorization:
+          - profile
+          - openid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+        - name: invite
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreatePartyInvite'
+      responses:
+        200: 
+          description: Invite added
+          schema:
+            $ref: '#/definitions/Invite'
+        400:
+         description: 'Error'
+         schema:
+            $ref: 'spec-files/common/responses.yaml#/definitions/ErrorResponse'
+definitions:
+  CreatePartyCommand:
+   type: object
+   properties:
+     name:
+       type: string
+       description: Party name assigned by the Consultant.
+     host:
+       $ref: '#/definitions/Host'
+     party_date:
+       type: string
+       format: date-time
+       description: Date the party is scheduled to take place.
+     invites:
+       type: array
+       items:
+         $ref: '#/definitions/CreatePartyInvite'
+  CreatePartyInvite:
+    type: object
+    properties:
+      first_name:
+        type: string
+        description: First name of the invited person
+      last_name:
+        type: string
+        description: Last name of the invited person
+      email:
+        type: string
+        description: Email address of the invited person
+      guest_id:
+        type: string
+        description: Unique identifier for the guest. Only present if they've attended other parties.
+  Contact:
+    type: object
+    properties:
+      first_name:
+        type: string
+        description: The person's first name         
+      last_name:
+        type: string
+        description: The person's last name
+      email:
+        type: string
+        description: The person's email address
+      phone_number:
+        type: string
+        description: The person's phone number
+      address:
+        $ref: 'spec-files/common/entities.yaml#/definitions/Address'
+  Host:
+   allOf:
+     - $ref: '#/definitions/Contact'
+   properties:
+     host_id:
+       type: string
+       description: Unique identifer representing the part host
+  Invite:
+    type: object
+    properties:
+      invite_id:
+        type: string
+        description: Unique identifier representing the invite for this contact/party combination
+      guest_id:
+        type: string
+        description: Unique identifier for the guest who has attended a previous party.
+      rsvp_status:
+        type: string
+        description: The status of the invite
+  Party:
+   type: object
+   properties:
+     party_id:
+       type: string
+       description: Unique identifier representing a specific party.
+     name:
+       type: string
+       description: The party name assigned by the Consultant.
+     party_date:
+       type: string
+       format: date-time
+       description: The date the party is scheduled to take place.
+     party_created_date:
+       type: string
+       format: date-time
+       description: The date the party was initially created.
+     invites:
+       type: array
+       items:
+         $ref: '#/definitions/Invite'
+
+
+

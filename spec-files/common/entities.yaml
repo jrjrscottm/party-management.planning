@@ -1,0 +1,19 @@
+definitions:
+  Address:
+   type: object
+   properties:
+    address_line_1:
+      type: string
+      description: Street information
+    address_line_2:
+      type: string
+      description: Additional street information
+    city:
+      type: string
+      description: City
+    state:
+      type: string
+      description: State
+    postal_code:
+      type: string
+      description: Postal code

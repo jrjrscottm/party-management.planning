@@ -1,0 +1,10 @@
+definitions:
+  ErrorResponse:
+    type: object
+    properties:
+      message:
+        type: string
+        description: the error message
+      error_code:
+        type: string
+        description: errorCode

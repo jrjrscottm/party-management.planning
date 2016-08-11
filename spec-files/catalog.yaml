@@ -1,0 +1,106 @@
+swagger: '2.0'
+info:
+  title: Catalog API
+  description: The catalog API is for retrieving available products
+  version: "1.0.0"
+host: api.jrjrnetworks.com
+schemes:
+ - https
+securityDefinitions:
+  api_authorization:
+    type: oauth2
+    description: jrjr oauth
+    authorizationUrl: http://localhost:5000/connect/authorize
+    tokenUrl: http://localhost:5000/connect/token
+    flow: accessCode
+    scopes: 
+      profile: Read user profile information
+      openid: Authenticate with OpenID
+basePath: /v1
+produces:
+ - application/json
+paths:
+   /products:
+     get:
+       summary: Get Products
+       description: |
+         The Products endpoint gets products based on some criteria.
+       tags:
+        - Products
+       security:
+         - api_authorization:
+           - profile
+           - openid
+       parameters:
+        - name: page
+          in: query
+          type: number
+          description: the page number
+          required: false
+        - name: page_size
+          in: query
+          type: number
+          description: the page size
+          required: false
+       responses:
+        200:
+          description: An array or products
+          schema:
+            type: array
+            items: 
+              $ref: '#/definitions/Product'
+   /categories:
+     get:
+       summary: Get Categories
+       description: |
+         The Categories endpoint gets categories based on some criteria.
+       tags:
+        - Categories
+       security:
+         - api_authorization:
+           - profile
+           - openid
+       parameters:
+        - name: page
+          in: query
+          type: number
+          description: the page number
+          required: false
+        - name: page_size
+          in: query
+          description: the page size
+          type: number
+          required: false
+       responses:
+        200:
+          description: An array or categories
+          schema:
+            type: array
+            items: 
+              $ref: '#/definitions/Category'
+definitions:
+  Category:
+    type: object
+    properties:
+      category_id:
+        type: string
+        description: Unique identifier representing the category
+      parent_category_id:
+        type: string
+        description: Unique identifier representing the parent category
+      name:
+        type: string
+        description: Display name of the category
+  Product:
+    type: object
+    properties:
+      product_id:
+        type: string
+        description: Unique identifier representing the product
+      name:
+        type: string
+        description: the display name of the product_id
+      description:
+        type: string
+        description: the description of the product
+

@@ -1,0 +1,201 @@
+swagger: '2.0'
+info:
+  title: Orders API
+  description: The orders API is for submitting orders through all means.
+  version: "1.0.0"
+host: api.jrjrnetworks.com
+schemes:
+ - https
+securityDefinitions:
+  api_authorization:
+    type: oauth2
+    description: jrjr oauth
+    authorizationUrl: http://localhost:5000/connect/authorize
+    tokenUrl: http://localhost:5000/connect/token
+    flow: accessCode
+    scopes: 
+      profile: Read user profile information
+      openid: Authenticate with OpenID
+basePath: /v1
+produces:
+ - application/json
+paths:
+
+  /orders:
+    get:
+     summary: Orders
+     description: |
+       Gets the logged in users most recent orders.
+     tags:
+      - Orders
+     security:
+       - api_authorization:
+         - profile
+         - openid
+     responses:
+       200:
+         description: An array or Orders
+         schema:
+           type: array
+           items:
+             $ref: '#/definitions/Order'
+    post:
+      summary: Create an Order
+      description: |
+        Create an order for the given guest and party.
+      tags:
+        - Orders
+      security:
+        - api_authorization:
+          - profile
+          - openid
+      parameters:
+        - name: order
+          required: true
+          in: body
+          schema:
+            $ref: '#/definitions/CreateOrderCommand'
+      responses:
+       201:
+         description: Order Created
+         schema:
+           $ref: '#/definitions/Order'
+         headers: 
+          Location:
+            description: The URL to get the order
+            type: string
+  /orders/{order_id}:
+    get:
+     summary: Orders
+     description: |
+       Gets the logged in users most recent orders.
+     tags:
+      - Orders
+     security:
+       - api_authorization:
+         - profile
+         - openid
+     parameters:
+      - name: order_id
+        in: path
+        required: true
+        type: string
+     responses:
+       200:
+         description: Order detail
+         schema:
+          $ref: '#/definitions/Order'
+  /orders/{order_id}/confirm:
+    post:
+     summary: Confirm Order
+     description: |
+      Submits the order for processing. Some changes may not be available.
+     tags:
+       - Orders
+     security:
+       - api_authorization:
+         - profile
+         - openid
+     parameters:
+      - name: order_id
+        in: path
+        required: true
+        type: string
+     responses:
+      200:
+        description: The order was confirmed
+        schema:
+         $ref: '#/definitions/Order'
+  /parties/{party_id}/orders:
+    get:
+      summary: Get party orders
+      description: |
+        Gets all of the orders for a party whether confirmed or not.
+      tags:
+        - Parties
+      security:
+        - api_authorization:
+          - profile
+          - openid
+      parameters:
+        - name: party_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: The orders for the party.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Order'
+definitions:
+  CreateOrderCommand:
+    type: object
+    properties:
+      party_id:
+        type: string
+        description: Unique identifier representing the party this order is from.
+      guest_id:
+        type: string
+        description: Unique identifier representing the guest that is placing the order.
+      payment_token:
+        type: string
+        description: Unique identifier representing a validated payment method
+      shipping_address:
+        $ref: 'spec-files/common/entities.yaml#/definitions/Address'
+      line_items:
+        type: array
+        items:
+          $ref: '#/definitions/CreateOrderLineItem'
+  CreateOrderLineItem:
+    type: object
+    properties:
+      product_id:
+        type: string
+        description: Unique identifier representing the product_id
+      quantity:
+        type: string
+        description: The number of items.
+  LineItem:
+    type: object
+    properties:
+      product_id:
+        type: string
+        description: Unique identifier representing the product_id
+      quantity:
+        type: string
+        description: The number of items.
+      sub_total:
+        type: number
+        format: double
+        description: the sub total for this line item.
+  Order:
+    type: object
+    properties:
+      order_id:
+        type: string
+        description: Unique identifier representing the order_id
+      party_id:
+        type: string
+        description: Unique identifier representing the party this order was placed for.
+      total:
+        type: number
+        format: double
+        description: The order total including tax and any discounts.
+      sub_total:
+        type: number
+        format: double
+        description: The order total before tax or discounts.
+      tax:
+        type: number
+        format: double
+        description: The tax amount for the order.
+      discount_total:
+        type: number
+        format: double
+        description: The discount total.
+      line_items:
+        type: array
+        items:
+          $ref: '#/definitions/LineItem'
